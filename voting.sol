@@ -83,7 +83,7 @@ contract VotingContract {
 
         // Get result.
         for(uint i = 0; i < candidates.length; i++) {
-            _result = string(abi.encodePacked(_result, "( ", candidates[i], ", ", uintToString(getCandidateVotes(candidates[i])), " ) "));
+            _result = string(abi.encodePacked(_result, "( ", candidates[i], ", ", uint2str(getCandidateVotes(candidates[i])), " ) "));
         }
 
         return _result;
@@ -91,32 +91,60 @@ contract VotingContract {
     }
 
     // Cast from Uint to String
-    function uintToString(uint _number) internal pure returns (string memory _numberAsString) {
-        
-        if (_number == 0) {
+    function uint2str(uint _i) internal pure returns (string memory _uintAsString) {
+        if (_i == 0) {
             return "0";
         }
-
-        uint j = _number;
+        uint j = _i;
         uint len;
-
-        while(j != 0) {
-            len ++;
+        while (j != 0) {
+            len++;
             j /= 10;
         }
         bytes memory bstr = new bytes(len);
-        uint k = len - 1;
-        while(_number != 0) {
-            bstr[k--] = bytes1(uint8(48 + _number % 10));
-            _number /= 10;
+        uint k = len;
+        while (_i != 0) {
+            k = k-1;
+            uint8 temp = (48 + uint8(_i - _i / 10 * 10));
+            bytes1 b1 = bytes1(temp);
+            bstr[k] = b1;
+            _i /= 10;
         }
-
         return string(bstr);
     }
 
     // Get Vote Winner.
     function winner() public view returns (string memory) {
-        
+
+        require(candidates.length > 0, "Not enough candidates.");
+
+        // Winner variable with its name.
+        string memory _winner = candidates[0];
+
+        // Draw flag.
+        bool flag;
+
+        for (uint i = 1; i < candidates.length; i++) {
+
+            if (candidateVotes[candidates[i]] > candidateVotes[_winner]) {
+
+                _winner = candidates[i];
+                flag = false;
+
+            } else if (candidateVotes[candidates[i]] == candidateVotes[_winner]) {
+
+                flag = true;
+
+            }
+
+        }
+
+        // If draw, return a draw.
+        if (flag) {
+            _winner = "There was a Draw";
+        }
+
+        return _winner;
     }
 
 }
